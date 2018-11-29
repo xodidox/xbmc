@@ -21847,3 +21847,40 @@ msgstr ""
 msgctxt "#39118"
 msgid "Share debug log"
 msgstr ""
+
+#: xbmc/filesystem/VideoDatabaseDirectory/DirectoryNodeMoviesOverview.cpp
+#: xbmc/filesystem/MusicDatabaseDirectory/DirectoryNodeOverview.cpp
+#: xbmc/filesystem/VideoDatabaseDirectory/DirectoryNodeTvShowOverview.cpp
+msgctxt "#39300"
+msgid "Types"
+msgstr ""
+
+#: xbmc/video/dialogs/GUIDialogVideoInfo.cpp
+msgctxt "#39301"
+msgid "Manage movie version"
+msgstr ""
+
+#: xbmc/video/dialogs/GUIDialogVideoInfo.cpp
+msgctxt "#39302"
+msgid "Convert movie to an additional version of moive"
+msgstr ""
+
+#: xbmc/video/dialogs/GUIDialogVideoInfo.cpp
+msgctxt "#39303"
+msgid "Select movie version"
+msgstr ""
+
+#: xbmc/video/dialogs/GUIDialogVideoInfo.cpp
+msgctxt "#39304"
+msgid "Add movie to a new version"
+msgstr ""
+
+#: xbmc/video/dialogs/GUIDialogVideoInfo.cpp
+msgctxt "#39305"
+msgid "Invalid movie selection"
+msgstr ""
+
+#: xbmc/video/dialogs/GUIDialogVideoInfo.cpp
+msgctxt "#39306"
+msgid "There is more than one movie version exist for the selected movie."
+msgstr ""

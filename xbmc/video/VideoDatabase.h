@@ -734,6 +734,7 @@ public:
   bool GetDirectorsNav(const std::string& strBaseDir, CFileItemList& items, int idContent=-1, const Filter &filter = Filter(), bool countOnly = false);
   bool GetWritersNav(const std::string& strBaseDir, CFileItemList& items, int idContent=-1, const Filter &filter = Filter(), bool countOnly = false);
   bool GetSetsNav(const std::string& strBaseDir, CFileItemList& items, int idContent=-1, const Filter &filter = Filter(), bool ignoreSingleMovieSets = false);
+  bool GetTypesNav(const std::string& strBaseDir, CFileItemList& items, int idMedia = -1);
   bool GetTagsNav(const std::string& strBaseDir, CFileItemList& items, int idContent=-1, const Filter &filter = Filter(), bool countOnly = false);
   bool GetMusicVideoAlbumsNav(const std::string& strBaseDir, CFileItemList& items, int idArtist, const Filter &filter = Filter(), bool countOnly = false);
 
@@ -873,7 +874,12 @@ public:
   int AddSet(const std::string& strSet, const std::string& strOverview = "");
   void ClearMovieSet(int idMovie);
   void SetMovieSet(int idMovie, int idSet);
+  void GetMovieVersion(int idMovie, CFileItemList& items);
+  void SetMovieVersion(int idMovieSource, int idMovieTarget, int idType);
+  void ChangeMovieVersion(int idMovie, int idType);
   bool SetVideoUserRating(int dbId, int rating, const MediaType& mediaType);
+
+  int AddType(const std::string& strType);
 
 protected:
   int GetMovieId(const std::string& strFilenameAndPath);
@@ -891,6 +897,9 @@ protected:
    \return id of the file, -1 if it is not in the db.
    */
   int GetFileId(const std::string& url);
+
+  int GetFileIdByMovie(int idMovie);
+  int GetFileIdByMovieVersion(int idMovie, int idType);
 
   int AddToTable(const std::string& table, const std::string& firstField, const std::string& secondField, const std::string& value);
   int UpdateRatings(int mediaId, const char *mediaType, const RatingMap& values, const std::string& defaultRating);

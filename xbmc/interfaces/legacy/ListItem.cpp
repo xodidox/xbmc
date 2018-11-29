@@ -462,6 +462,8 @@ namespace XBMCAddon
             videotag.SetSetOverview(value);
           else if (key == "tag")
             videotag.SetTags(getStringArray(alt, key, value));
+          else if (key == "version")
+            videotag.SetVersion(value);
           else if (key == "imdbnumber")
             videotag.SetUniqueID(value);
           else if (key == "code")

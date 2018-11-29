@@ -17,6 +17,15 @@
 #include "TextureCache.h"
 #include "Util.h"
 #include "dialogs/GUIDialogFileBrowser.h"
+#include "dialogs/GUIDialogOK.h"
+#include "video/VideoInfoScanner.h"
+#include "video/tags/VideoTagLoaderFFmpeg.h"
+#include "messaging/ApplicationMessenger.h"
+#include "video/VideoInfoTag.h"
+#include "guilib/GUIKeyboardFactory.h"
+#include "guilib/GUIWindowManager.h"
+#include "dialogs/GUIDialogYesNo.h"
+#include "dialogs/GUIDialogSelect.h"
 #include "dialogs/GUIDialogProgress.h"
 #include "dialogs/GUIDialogSelect.h"
 #include "dialogs/GUIDialogYesNo.h"
@@ -70,6 +79,7 @@ using namespace KODI::MESSAGING;
 #define CONTROL_BTN_PLAY_TRAILER    11
 #define CONTROL_BTN_GET_FANART      12
 #define CONTROL_BTN_DIRECTOR        13
+#define CONTROL_BTN_CHANGE_VERSION  14
 
 #define CONTROL_LIST                50
 
@@ -145,6 +155,10 @@ bool CGUIDialogVideoInfo::OnMessage(CGUIMessage& message)
       {
         m_bViewReview = !m_bViewReview;
         Update();
+      }
+      else if (iControl == CONTROL_BTN_CHANGE_VERSION)
+      {
+        OnChangeVersion();
       }
       else if (iControl == CONTROL_BTN_PLAY)
       {
@@ -397,14 +411,14 @@ void CGUIDialogVideoInfo::SetMovie(const CFileItem *item)
 void CGUIDialogVideoInfo::Update()
 {
   // setup plot text area
-  std::shared_ptr<CSettingList> setting(std::dynamic_pointer_cast<CSettingList>( 
+  std::shared_ptr<CSettingList> setting(std::dynamic_pointer_cast<CSettingList>(
     CServiceBroker::GetSettingsComponent()->GetSettings()->GetSetting(CSettings::SETTING_VIDEOLIBRARY_SHOWUNWATCHEDPLOTS)));
   std::string strTmp = m_movieItem->GetVideoInfoTag()->m_strPlot;
   if (m_movieItem->GetVideoInfoTag()->m_type != MediaTypeTvShow)
-    if (m_movieItem->GetVideoInfoTag()->GetPlayCount() == 0 && 
+    if (m_movieItem->GetVideoInfoTag()->GetPlayCount() == 0 &&
         setting &&
         (
-         (m_movieItem->GetVideoInfoTag()->m_type == MediaTypeMovie && (!setting->FindIntInList(CSettings::VIDEOLIBRARY_PLOTS_SHOW_UNWATCHED_MOVIES))) || 
+         (m_movieItem->GetVideoInfoTag()->m_type == MediaTypeMovie && (!setting->FindIntInList(CSettings::VIDEOLIBRARY_PLOTS_SHOW_UNWATCHED_MOVIES))) ||
          (m_movieItem->GetVideoInfoTag()->m_type == MediaTypeEpisode && (!setting->FindIntInList(CSettings::VIDEOLIBRARY_PLOTS_SHOW_UNWATCHED_TVSHOWEPISODES)))
         )
        )
@@ -612,6 +626,47 @@ void CGUIDialogVideoInfo::ClearCastList()
   CGUIMessage msg(GUI_MSG_LABEL_RESET, GetID(), CONTROL_LIST);
   OnMessage(msg);
   m_castList->Clear();
+}
+
+void CGUIDialogVideoInfo::OnChangeVersion()
+{
+  CVideoDatabase videodb;
+  if (!videodb.Open())
+    return;
+
+  CFileItemList list;
+  int dbId = m_movieItem->GetVideoInfoTag()->m_iDbId;
+
+  CGUIDialogSelect* dialog = CServiceBroker::GetGUI()->GetWindowManager().GetWindow<CGUIDialogSelect>(WINDOW_DIALOG_SELECT);
+  if (!dialog)
+    return;
+
+  int selected = -1;
+
+  videodb.GetTypesNav("videodb://movies/types", list, dbId);
+  list.Sort(SortByLabel, SortOrderAscending, CServiceBroker::GetSettingsComponent()->GetSettings()->GetBool(CSettings::SETTING_FILELISTS_IGNORETHEWHENSORTING) ? SortAttributeIgnoreArticle : SortAttributeNone);
+  dialog->Reset();
+  dialog->SetItems(list);
+  dialog->SetHeading(CVariant{39303});
+  dialog->Open();
+
+  if (dialog->IsConfirmed())
+  {
+    CFileItemPtr selectedItem = dialog->GetSelectedFileItem();
+    if (selectedItem != nullptr)
+      selected = atoi(selectedItem->GetLabel2().c_str());
+  }
+  else
+    return;
+
+  if (selected < 0)
+    return;
+
+  videodb.ChangeMovieVersion(dbId, selected);
+
+  std::string path;
+  videodb.GetFilePathById(dbId, path, VIDEODB_CONTENT_MOVIES);
+  m_movieItem->SetPath(path);
 }
 
 void CGUIDialogVideoInfo::Play(bool resume)
@@ -1176,6 +1231,9 @@ int CGUIDialogVideoInfo::ManageVideoItem(const CFileItemPtr &item)
 
     // set or change movie set the movie belongs to
     buttons.Add(CONTEXT_BUTTON_SET_MOVIESET, 20465);
+
+    // set movie version
+    buttons.Add(CONTEXT_BUTTON_SET_MOVIE_VERSION, 39301);
   }
 
   if (type == MediaTypeEpisode &&
@@ -1245,6 +1303,10 @@ int CGUIDialogVideoInfo::ManageVideoItem(const CFileItemPtr &item)
           result = SetMovieSet(item.get(), selectedSet.get());
         break;
       }
+
+      case CONTEXT_BUTTON_SET_MOVIE_VERSION:
+        result = SetMovieVersion(item);
+        break;
 
       case CONTEXT_BUTTON_UNLINK_BOOKMARK:
         database.DeleteBookMarkForEpisode(*item->GetVideoInfoTag());
@@ -1707,6 +1769,102 @@ bool CGUIDialogVideoInfo::SetMovieSet(const CFileItem *movieItem, const CFileIte
     return false;
 
   videodb.SetMovieSet(movieItem->GetVideoInfoTag()->m_iDbId, selectedSet->GetVideoInfoTag()->m_iDbId);
+  return true;
+}
+
+bool CGUIDialogVideoInfo::SetMovieVersion(const CFileItemPtr &item)
+{
+  // Set this movie as an alternate version of another movie, user will
+  // be asked to provide the target movie and the alternate version type
+  // (EXTENDED, DIRECTORS CUT, etc.), this movie entry will be deleted
+  // from DB at last
+  //
+  // N.B. Choosing the movie itself as target movie is also allowed, which
+  //      will just change the alternate version type if that get changed
+
+  if (item == nullptr || !item->HasVideoInfoTag())
+    return false;
+
+  CVideoDatabase videodb;
+  if (!videodb.Open())
+    return false;
+
+  CFileItemList list;
+  int dbId = item->GetVideoInfoTag()->m_iDbId;
+
+  videodb.GetMovieVersion(dbId, list);
+  if (list.Size() > 1)
+  {
+      CGUIDialogOK* dialog = CServiceBroker::GetGUI()->GetWindowManager().GetWindow<CGUIDialogOK>(WINDOW_DIALOG_OK);
+      if (!dialog)
+        return false;
+
+      dialog->SetHeading(CVariant{39305});
+      dialog->SetLine(1, CVariant{"\n"});
+      dialog->SetLine(2, CVariant{39306});
+      dialog->Open();
+
+      return false;
+  }
+
+  int targetDbId;
+
+  // choose the target movie
+  videodb.GetMoviesNav("videodb://movies/titles", list);
+  if (list.Size() < 1)
+    return false;
+
+  CGUIDialogSelect* dialog = CServiceBroker::GetGUI()->GetWindowManager().GetWindow<CGUIDialogSelect>(WINDOW_DIALOG_SELECT);
+  if (!dialog)
+    return false;
+
+  int selected = -1;
+
+  list.Sort(SortByLabel, SortOrderAscending, CServiceBroker::GetSettingsComponent()->GetSettings()->GetBool(CSettings::SETTING_FILELISTS_IGNORETHEWHENSORTING) ? SortAttributeIgnoreArticle : SortAttributeNone);
+  dialog->Reset();
+  dialog->SetItems(list);
+  dialog->SetHeading(CVariant{39302});
+  dialog->Open();
+  selected = dialog->GetSelectedItem();
+
+  if (selected < 0)
+    return false;
+
+  targetDbId = list[selected]->GetVideoInfoTag()->m_iDbId;
+
+  list.ClearItems();
+
+  // choose the version type
+  videodb.GetTypesNav("videodb://movies/types", list);
+  list.Sort(SortByLabel, SortOrderAscending, CServiceBroker::GetSettingsComponent()->GetSettings()->GetBool(CSettings::SETTING_FILELISTS_IGNORETHEWHENSORTING) ? SortAttributeIgnoreArticle : SortAttributeNone);
+  dialog->Reset();
+  dialog->SetItems(list);
+  dialog->SetHeading(CVariant{39303});
+  dialog->EnableButton(true, 39304); // new version via button
+  dialog->Open();
+
+  if (dialog->IsButtonPressed())
+  {
+    // create a new version type
+    std::string newType;
+    if (!CGUIKeyboardFactory::ShowAndGetInput(newType, CVariant{g_localizeStrings.Get(39304)}, false))
+      return false;
+    selected = videodb.AddType(StringUtils::Trim(newType));
+  }
+  else if (dialog->IsConfirmed())
+  {
+    CFileItemPtr selectedItem = dialog->GetSelectedFileItem();
+    if (selectedItem != nullptr)
+      selected = atoi(selectedItem->GetLabel2().c_str());
+  }
+  else
+    return false;
+
+  if (selected < 0)
+    return false;
+
+  videodb.SetMovieVersion(dbId, targetDbId, selected);
+
   return true;
 }
 

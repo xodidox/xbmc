@@ -193,6 +193,13 @@ void CVideoDatabase::CreateTables()
 
   CLog::Log(LOGINFO, "create uniqueid table");
   m_pDS->exec("CREATE TABLE uniqueid (uniqueid_id INTEGER PRIMARY KEY, media_id INTEGER, media_type TEXT, value TEXT, type TEXT)");
+
+  CLog::Log(LOGINFO, "create type table");
+  m_pDS->exec("CREATE TABLE type (type_id INTEGER PRIMARY KEY, name TEXT)");
+  m_pDS->exec("INSERT INTO type VALUES(1, 'STANDARD')");
+
+  CLog::Log(LOGINFO, "create type_link table");
+  m_pDS->exec("CREATE TABLE type_link (file_id INTEGER PRIMARY KEY, media_id INTEGER, media_type TEXT, type_id INTEGER)");
 }
 
 void CVideoDatabase::CreateLinkIndex(const char *table)
@@ -1351,6 +1358,7 @@ int CVideoDatabase::AddMovie(const std::string& strFilenameAndPath)
       std::string strSQL=PrepareSQL("insert into movie (idMovie, idFile) values (NULL, %i)", idFile);
       m_pDS->exec(strSQL);
       idMovie = (int)m_pDS->lastinsertid();
+      m_pDS->exec(PrepareSQL("INSERT INTO type_link VALUES(%i, %i, 'movie', 1)", idFile, idMovie));
     }
 
     return idMovie;
@@ -1660,6 +1668,40 @@ int CVideoDatabase::AddSet(const std::string& strSet, const std::string& strOver
   catch (...)
   {
     CLog::Log(LOGERROR, "%s (%s) failed", __FUNCTION__, strSet.c_str());
+  }
+
+  return -1;
+}
+
+int CVideoDatabase::AddType(const std::string& strType)
+{
+  if (strType.empty())
+    return -1;
+
+  try
+  {
+    if (m_pDB.get() == nullptr || m_pDS.get() == nullptr)
+      return -1;
+
+    std::string strSQL = PrepareSQL("SELECT type_id FROM type WHERE name LIKE '%s'", strType.c_str());
+    m_pDS->query(strSQL);
+    if (m_pDS->num_rows() == 0)
+    {
+      m_pDS->close();
+      strSQL = PrepareSQL("INSERT INTO type (type_id, name) VALUES(NULL, '%s')", strType.c_str(), 0);
+      m_pDS->exec(strSQL);
+      return static_cast<int>(m_pDS->lastinsertid());
+    }
+    else
+    {
+      int id = m_pDS->fv("type_id").get_asInt();
+      m_pDS->close();
+      return id;
+    }
+  }
+  catch (...)
+  {
+    CLog::Log(LOGERROR, "%s (%s) failed", __FUNCTION__, strType.c_str());
   }
 
   return -1;
@@ -3478,8 +3520,8 @@ void CVideoDatabase::DeleteMovie(int idMovie, bool bKeepId /* = false */)
       if (!path.empty())
         InvalidatePathHash(path);
 
-      std::string strSQL = PrepareSQL("delete from movie where idMovie=%i", idMovie);
-      m_pDS->exec(strSQL);
+      m_pDS->exec(PrepareSQL("DELETE FROM movie WHERE idMovie = %i", idMovie));
+      m_pDS->exec(PrepareSQL("DELETE FROM type_link WHERE media_id = %i", idMovie));
     }
 
     //! @todo move this below CommitTransaction() once UPnP doesn't rely on this anymore
@@ -3734,6 +3776,121 @@ void CVideoDatabase::SetMovieSet(int idMovie, int idSet)
     ExecuteQuery(PrepareSQL("update movie set idSet = %i where idMovie = %i", idSet, idMovie));
   else
     ExecuteQuery(PrepareSQL("update movie set idSet = null where idMovie = %i", idMovie));
+}
+
+void CVideoDatabase::GetMovieVersion(int idMovie, CFileItemList& items)
+{
+  if (m_pDB.get() == nullptr || m_pDS.get() == nullptr)
+    return;
+
+  try
+  {
+      m_pDS->query(PrepareSQL("SELECT type.name AS name,"
+                              "  path.strPath AS strPath,"
+                              "  files.strFileName AS strFileName "
+                              "FROM type"
+                              "  JOIN type_link ON"
+                              "    type_link.type_id = type.type_id"
+                              "  JOIN files ON"
+                              "    files.idFile = type_link.file_id"
+                              "  JOIN path ON"
+                              "    path.idPath = files.idPath "
+                              "WHERE type_link.media_id = %i", idMovie));
+
+    while (!m_pDS->eof())
+    {
+      CFileItemPtr pItem(new CFileItem());
+      pItem->SetLabel(m_pDS->fv(0).get_asString());
+      std::string file;
+      ConstructPath(file, m_pDS->fv(1).get_asString(), m_pDS->fv(2).get_asString());
+      pItem->SetLabel2(file);
+      items.Add(pItem);
+      m_pDS->next();
+    }
+    m_pDS->close();
+  }
+  catch (...)
+  {
+    CLog::Log(LOGERROR, "%s failed for movie %d", __FUNCTION__, idMovie);
+  }
+}
+
+int CVideoDatabase::GetFileIdByMovie(int idMovie)
+{
+  if (m_pDB.get() == nullptr || m_pDS.get() == nullptr)
+    return -1;
+
+  int idFile = -1;
+
+  try
+  {
+    m_pDS->query(PrepareSQL("SELECT idFile FROM movie WHERE idMovie = %i", idMovie));
+
+    if (!m_pDS->eof())
+    {
+      idFile = m_pDS->fv(0).get_asInt();
+    }
+
+    m_pDS->close();
+  }
+  catch (...)
+  {
+    CLog::Log(LOGERROR, "%s failed for movie %d", __FUNCTION__, idMovie);
+  }
+
+  return idFile;
+}
+
+int CVideoDatabase::GetFileIdByMovieVersion(int idMovie, int idType)
+{
+  if (m_pDB.get() == nullptr || m_pDS.get() == nullptr)
+    return -1;
+
+  int idFile = -1;
+
+  try
+  {
+    m_pDS->query(PrepareSQL("SELECT file_id FROM type_link WHERE media_id = %i AND type_id = %i", idMovie, idType));
+
+    if (!m_pDS->eof())
+    {
+      idFile = m_pDS->fv(0).get_asInt();
+    }
+
+    m_pDS->close();
+  }
+  catch (...)
+  {
+    CLog::Log(LOGERROR, "%s failed for movie %d", __FUNCTION__, idMovie);
+  }
+
+  return idFile;
+}
+
+void CVideoDatabase::SetMovieVersion(int idMovieSource, int idMovieTarget, int idType)
+{
+  int idFile = GetFileIdByMovie(idMovieSource);
+  if (idFile < 0)
+    return;
+
+  if (idMovieSource != idMovieTarget)
+  {
+    //ExecuteQuery(PrepareSQL("DELETE FROM type_link WHERE file_id = %i", idFile));
+    //ExecuteQuery(PrepareSQL("INSERT INTO type_link VALUES(%i, %i, 'movie', %i)", idFile, idMovieTarget, idType));
+    ExecuteQuery(PrepareSQL("UPDATE type_link SET media_id = %i, type_id = %i WHERE file_id = %i", idMovieTarget, idType, idFile));
+    DeleteMovie(idMovieSource);
+  }
+  else
+    ExecuteQuery(PrepareSQL("UPDATE type_link SET type_id = %i WHERE file_id = %i", idType, idFile));
+}
+
+void CVideoDatabase::ChangeMovieVersion(int idMovie, int idType)
+{
+  int idFile = GetFileIdByMovieVersion(idMovie, idType);
+  if (idFile < 0)
+    return;
+
+  ExecuteQuery(PrepareSQL("UPDATE movie SET idFile = %i WHERE idMovie = %i", idFile, idMovie));
 }
 
 void CVideoDatabase::DeleteTag(int idTag, VIDEODB_CONTENT_TYPE mediaType)
@@ -4177,7 +4334,7 @@ CVideoInfoTag CVideoDatabase::GetDetailsForEpisode(const dbiplus::sql_record* co
     return details;
 
   details = GetBasicDetailsForEpisode(record);
-  
+
   unsigned int time = XbmcThreads::SystemClockMillis();
 
   details.m_strPath = record->at(VIDEODB_DETAILS_EPISODE_PATH).get_asString();
@@ -4191,7 +4348,7 @@ CVideoInfoTag CVideoDatabase::GetDetailsForEpisode(const dbiplus::sql_record* co
   details.m_genre = StringUtils::Split(record->at(VIDEODB_DETAILS_EPISODE_TVSHOW_GENRE).get_asString(), CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_videoItemSeparator);
   details.m_studio = StringUtils::Split(record->at(VIDEODB_DETAILS_EPISODE_TVSHOW_STUDIO).get_asString(), CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_videoItemSeparator);
   details.SetPremieredFromDBDate(record->at(VIDEODB_DETAILS_EPISODE_TVSHOW_AIRED).get_asString());
-  
+
   details.SetResumePoint(record->at(VIDEODB_DETAILS_EPISODE_RESUME_TIME).get_asInt(),
                          record->at(VIDEODB_DETAILS_EPISODE_TOTAL_TIME).get_asInt(),
                          record->at(VIDEODB_DETAILS_EPISODE_PLAYER_STATE).get_asString());
@@ -5692,11 +5849,22 @@ void CVideoDatabase::UpdateTables(int iVersion)
     }
     m_pDS->close();
   }
+
+  if (iVersion < 118)
+  {
+    // create type table
+    m_pDS->exec("CREATE TABLE type (type_id INTEGER PRIMARY KEY, name TEXT)");
+    m_pDS->exec("INSERT INTO type VALUES(1, 'STANDARD')");
+
+    // create type_link table
+    m_pDS->exec("CREATE TABLE type_link (file_id INTEGER PRIMARY KEY, media_id INTEGER, media_type TEXT, type_id INTEGER)");
+    m_pDS->exec("INSERT INTO type_link SELECT idFile, idMovie, 'movie', 1 FROM movie");
+  }
 }
 
 int CVideoDatabase::GetSchemaVersion() const
 {
-  return 116;
+  return 118;
 }
 
 bool CVideoDatabase::LookupByFolders(const std::string &path, bool shows)
@@ -6337,6 +6505,40 @@ bool CVideoDatabase::GetSetsByWhere(const std::string& strBaseDir, const Filter 
     items.ClearItems();
     items.Append(sets);
 
+    return true;
+  }
+  catch (...)
+  {
+    CLog::Log(LOGERROR, "%s failed", __FUNCTION__);
+  }
+  return false;
+}
+
+bool CVideoDatabase::GetTypesNav(const std::string& strBaseDir, CFileItemList& items, int idMedia /* = -1 */)
+{
+  if (m_pDB.get() == nullptr || m_pDS.get() == nullptr)
+    return false;
+
+  try
+  {
+    std::string strSQL;
+
+    if (idMedia != -1)
+      strSQL = PrepareSQL("SELECT type.name, type.type_id FROM type JOIN type_link ON type_link.type_id = type.type_id WHERE media_id = %i", idMedia);
+    else
+      strSQL = PrepareSQL("SELECT name, type_id FROM type");
+
+    m_pDS->query(strSQL);
+
+    while (!m_pDS->eof())
+    {
+      CFileItemPtr pItem(new CFileItem());
+      pItem->SetLabel(m_pDS->fv(0).get_asString());
+      pItem->SetLabel2(m_pDS->fv(1).get_asString());
+      items.Add(pItem);
+      m_pDS->next();
+    }
+    m_pDS->close();
     return true;
   }
   catch (...)
