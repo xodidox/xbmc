@@ -630,18 +630,16 @@ void CGUIDialogVideoInfo::ClearCastList()
 
 void CGUIDialogVideoInfo::OnChangeVersion()
 {
+  CGUIDialogSelect* dialog = CServiceBroker::GetGUI()->GetWindowManager().GetWindow<CGUIDialogSelect>(WINDOW_DIALOG_SELECT);
+  if (!dialog)
+    return;
+
   CVideoDatabase videodb;
   if (!videodb.Open())
     return;
 
   CFileItemList list;
   int dbId = m_movieItem->GetVideoInfoTag()->m_iDbId;
-
-  CGUIDialogSelect* dialog = CServiceBroker::GetGUI()->GetWindowManager().GetWindow<CGUIDialogSelect>(WINDOW_DIALOG_SELECT);
-  if (!dialog)
-    return;
-
-  int selected = -1;
 
   videodb.GetTypesNav("videodb://movies/types", list, dbId);
   list.Sort(SortByLabel, SortOrderAscending, CServiceBroker::GetSettingsComponent()->GetSettings()->GetBool(CSettings::SETTING_FILELISTS_IGNORETHEWHENSORTING) ? SortAttributeIgnoreArticle : SortAttributeNone);
@@ -651,10 +649,12 @@ void CGUIDialogVideoInfo::OnChangeVersion()
   dialog->SetSelected(videodb.GetMovieCurrentVersion(dbId));
   dialog->Open();
 
+  int selected = -1;
+
   if (dialog->IsConfirmed())
   {
     CFileItemPtr selectedItem = dialog->GetSelectedFileItem();
-    if (selectedItem != nullptr)
+    if (selectedItem)
       selected = atoi(selectedItem->GetLabel2().c_str());
   }
   else
@@ -1781,7 +1781,7 @@ bool CGUIDialogVideoInfo::SetMovieVersion(const CFileItemPtr &item)
   // N.B. Choosing the movie itself as target movie is also allowed, which
   //      will just change the alternate version type if that get changed
 
-  if (item == nullptr || !item->HasVideoInfoTag())
+  if (!item || !item->HasVideoInfoTag())
     return false;
 
   CVideoDatabase videodb;
@@ -1830,15 +1830,13 @@ bool CGUIDialogVideoInfo::SetMovieVersion(const CFileItemPtr &item)
   if (!dialog)
     return false;
 
-  int selected = -1;
-
   list.Sort(SortByLabel, SortOrderAscending, CServiceBroker::GetSettingsComponent()->GetSettings()->GetBool(CSettings::SETTING_FILELISTS_IGNORETHEWHENSORTING) ? SortAttributeIgnoreArticle : SortAttributeNone);
   dialog->Reset();
   dialog->SetItems(list);
   dialog->SetHeading(CVariant{39302});
   dialog->SetSelected(itemId);
   dialog->Open();
-  selected = dialog->GetSelectedItem();
+  int selected = dialog->GetSelectedItem();
 
   if (selected < 0)
     return false;
@@ -1876,7 +1874,7 @@ bool CGUIDialogVideoInfo::SetMovieVersion(const CFileItemPtr &item)
     else if (dialog->IsConfirmed())
     {
       CFileItemPtr selectedItem = dialog->GetSelectedFileItem();
-      if (selectedItem != nullptr)
+      if (selectedItem)
       {
         selectedType = selectedItem->GetLabel();
         selected = atoi(selectedItem->GetLabel2().c_str());

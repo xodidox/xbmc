@@ -21848,6 +21848,7 @@ msgctxt "#39118"
 msgid "Share debug log"
 msgstr ""
 
+#. Video version types (Director's Cut, for example)
 #: xbmc/filesystem/VideoDatabaseDirectory/DirectoryNodeMoviesOverview.cpp
 #: xbmc/filesystem/MusicDatabaseDirectory/DirectoryNodeOverview.cpp
 #: xbmc/filesystem/VideoDatabaseDirectory/DirectoryNodeTvShowOverview.cpp
@@ -21855,41 +21856,49 @@ msgctxt "#39300"
 msgid "Types"
 msgstr ""
 
+#. Movie version management menu
 #: xbmc/video/dialogs/GUIDialogVideoInfo.cpp
 msgctxt "#39301"
 msgid "Manage movie version"
 msgstr ""
 
+#. Manage movie version dialog title
 #: xbmc/video/dialogs/GUIDialogVideoInfo.cpp
 msgctxt "#39302"
 msgid "Convert movie to an additional version for"
 msgstr ""
 
+#. Movie version selection dialog title
 #: xbmc/video/dialogs/GUIDialogVideoInfo.cpp
 msgctxt "#39303"
 msgid "Select movie version"
 msgstr ""
 
+#. Movie version selection dialog button
 #: xbmc/video/dialogs/GUIDialogVideoInfo.cpp
 msgctxt "#39304"
 msgid "Add movie to a new version"
 msgstr ""
 
+#. Warning dialog title
 #: xbmc/video/dialogs/GUIDialogVideoInfo.cpp
 msgctxt "#39305"
 msgid "Invalid operation"
 msgstr ""
 
+#. Warning dialog text
 #: xbmc/video/dialogs/GUIDialogVideoInfo.cpp
 msgctxt "#39306"
 msgid "There is more than one movie version exist for the selected movie. It's not allowed to convert this movie to an additonal version for another movie. Please remove it from library and covert each version separately after rescanning them."
 msgstr ""
 
+#. Default movie version change dialog title
 #: xbmc/video/dialogs/GUIDialogVideoInfo.cpp
 msgctxt "#39307"
 msgid "Change default movie version"
 msgstr ""
 
+#. Warning dialog text
 #: xbmc/video/dialogs/GUIDialogVideoInfo.cpp
 msgctxt "#39308"
 msgid "The \"%s\" version of this movie already exists, are you sure to add a duplication?"

@@ -1447,7 +1447,7 @@ void CVideoInfoTag::SetTags(std::vector<std::string> tags)
 
 void CVideoInfoTag::SetVersion(std::string version)
 {
-    m_strVersion = Trim(std::move(version));
+  m_strVersion = Trim(std::move(version));
 }
 
 void CVideoInfoTag::SetFile(std::string file)

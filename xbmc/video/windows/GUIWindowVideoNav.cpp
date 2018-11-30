@@ -516,7 +516,7 @@ bool CGUIWindowVideoNav::GetDirectory(const std::string &strDirectory, CFileItem
       else if (node == NODE_TYPE_TAGS)
         items.SetContent("tags");
       else if (node == NODE_TYPE_TYPES)
-      items.SetContent("types");
+        items.SetContent("types");
       else
         items.SetContent("");
     }

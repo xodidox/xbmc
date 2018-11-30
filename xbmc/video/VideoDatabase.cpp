@@ -1681,7 +1681,7 @@ int CVideoDatabase::AddType(const std::string& strType)
 
   try
   {
-    if (m_pDB.get() == nullptr || m_pDS.get() == nullptr)
+    if (!m_pDB || !m_pDS)
       return -1;
 
     std::string strSQL = PrepareSQL("SELECT type_id FROM type WHERE name LIKE '%s'", strType.c_str());
@@ -3780,7 +3780,7 @@ void CVideoDatabase::SetMovieSet(int idMovie, int idSet)
 
 void CVideoDatabase::GetMovieVersion(int idMovie, CFileItemList& items)
 {
-  if (m_pDB.get() == nullptr || m_pDS.get() == nullptr)
+  if (!m_pDB || !m_pDS)
     return;
 
   try
@@ -3797,11 +3797,12 @@ void CVideoDatabase::GetMovieVersion(int idMovie, CFileItemList& items)
                             "    path.idPath = files.idPath "
                             "WHERE type_link.media_id = %i", idMovie));
 
+    std::string file;
+
     while (!m_pDS->eof())
     {
       CFileItemPtr pItem(new CFileItem());
       pItem->SetLabel(m_pDS->fv(0).get_asString());
-      std::string file;
       ConstructPath(file, m_pDS->fv(1).get_asString(), m_pDS->fv(2).get_asString());
       pItem->SetLabel2(file);
       items.Add(pItem);
@@ -3815,12 +3816,12 @@ void CVideoDatabase::GetMovieVersion(int idMovie, CFileItemList& items)
   }
 }
 
-std::string CVideoDatabase::GetMovieCurrentVersion(int idMovie)
+std::string CVideoDatabase::GetMovieCurrentVersion(int idMovie) const
 {
-  if (m_pDB.get() == nullptr || m_pDS.get() == nullptr)
+  if (!m_pDB || !m_pDS)
     return "";
 
-  std::string name = "";
+  std::string name;
 
   try
   {
@@ -3847,9 +3848,9 @@ std::string CVideoDatabase::GetMovieCurrentVersion(int idMovie)
   return name;
 }
 
-int CVideoDatabase::GetFileIdByMovie(int idMovie)
+int CVideoDatabase::GetFileIdByMovie(int idMovie) const
 {
-  if (m_pDB.get() == nullptr || m_pDS.get() == nullptr)
+  if (!m_pDB || !m_pDS)
     return -1;
 
   int idFile = -1;
@@ -3873,9 +3874,9 @@ int CVideoDatabase::GetFileIdByMovie(int idMovie)
   return idFile;
 }
 
-int CVideoDatabase::GetFileIdByMovieVersion(int idMovie, int idType)
+int CVideoDatabase::GetFileIdByMovieVersion(int idMovie, int idType) const
 {
-  if (m_pDB.get() == nullptr || m_pDS.get() == nullptr)
+  if (!m_pDB || !m_pDS)
     return -1;
 
   int idFile = -1;
@@ -6544,9 +6545,9 @@ bool CVideoDatabase::GetSetsByWhere(const std::string& strBaseDir, const Filter 
   return false;
 }
 
-bool CVideoDatabase::GetTypesNav(const std::string& strBaseDir, CFileItemList& items, int idMedia /* = -1 */)
+bool CVideoDatabase::GetTypesNav(const std::string& strBaseDir, CFileItemList& items, int idMedia /* = -1 */) const
 {
-  if (m_pDB.get() == nullptr || m_pDS.get() == nullptr)
+  if (!m_pDB || !m_pDS)
     return false;
 
   try
