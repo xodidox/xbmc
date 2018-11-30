@@ -21889,3 +21889,8 @@ msgstr ""
 msgctxt "#39307"
 msgid "Change default movie version"
 msgstr ""
+
+#: xbmc/video/dialogs/GUIDialogVideoInfo.cpp
+msgctxt "#39308"
+msgid "The \"%s\" version of this movie already exists, are you sure to add a duplication?"
+msgstr ""

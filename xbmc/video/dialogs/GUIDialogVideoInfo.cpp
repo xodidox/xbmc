@@ -1788,6 +1788,7 @@ bool CGUIDialogVideoInfo::SetMovieVersion(const CFileItemPtr &item)
   if (!videodb.Open())
     return false;
 
+  // invalid operation warning
   CFileItemList list;
   int dbId = item->GetVideoInfoTag()->m_iDbId;
 
@@ -1805,7 +1806,7 @@ bool CGUIDialogVideoInfo::SetMovieVersion(const CFileItemPtr &item)
       return false;
   }
 
-  list.Clear();
+  list.ClearItems();
 
   int targetDbId;
 
@@ -1844,37 +1845,65 @@ bool CGUIDialogVideoInfo::SetMovieVersion(const CFileItemPtr &item)
 
   targetDbId = list[selected]->GetVideoInfoTag()->m_iDbId;
 
-  list.ClearItems();
+  CFileItemList targetList;
+  videodb.GetMovieVersion(targetDbId, targetList);
 
-  // choose the version type
-  videodb.GetTypesNav("videodb://movies/types", list);
-  list.Sort(SortByLabel, SortOrderAscending, CServiceBroker::GetSettingsComponent()->GetSettings()->GetBool(CSettings::SETTING_FILELISTS_IGNORETHEWHENSORTING) ? SortAttributeIgnoreArticle : SortAttributeNone);
-  dialog->Reset();
-  dialog->SetItems(list);
-  dialog->SetHeading(CVariant{39303});
-  dialog->EnableButton(true, 39304); // new version via button
-  dialog->SetSelected(1); // skip the first one as it's default
-  dialog->Open();
-
-  if (dialog->IsButtonPressed())
+  do
   {
-    // create a new version type
-    std::string newType;
-    if (!CGUIKeyboardFactory::ShowAndGetInput(newType, CVariant{g_localizeStrings.Get(39304)}, false))
+    list.ClearItems();
+
+    std::string selectedType;
+
+    // choose the version type
+    videodb.GetTypesNav("videodb://movies/types", list);
+    list.Sort(SortByLabel, SortOrderAscending, CServiceBroker::GetSettingsComponent()->GetSettings()->GetBool(CSettings::SETTING_FILELISTS_IGNORETHEWHENSORTING) ? SortAttributeIgnoreArticle : SortAttributeNone);
+    dialog->Reset();
+    dialog->SetItems(list);
+    dialog->SetHeading(CVariant{39303});
+    dialog->EnableButton(true, 39304); // new version via button
+    dialog->SetSelected(1); // skip the first one as it's default
+    dialog->Open();
+
+    if (dialog->IsButtonPressed())
+    {
+      // create a new version type
+      std::string newType;
+      if (!CGUIKeyboardFactory::ShowAndGetInput(newType, CVariant{g_localizeStrings.Get(39304)}, false))
+        return false;
+      selectedType = StringUtils::Trim(newType);
+      selected = videodb.AddType(selectedType);
+    }
+    else if (dialog->IsConfirmed())
+    {
+      CFileItemPtr selectedItem = dialog->GetSelectedFileItem();
+      if (selectedItem != nullptr)
+      {
+        selectedType = selectedItem->GetLabel();
+        selected = atoi(selectedItem->GetLabel2().c_str());
+      }
+    }
+    else
       return false;
-    selected = videodb.AddType(StringUtils::Trim(newType));
-  }
-  else if (dialog->IsConfirmed())
-  {
-    CFileItemPtr selectedItem = dialog->GetSelectedFileItem();
-    if (selectedItem != nullptr)
-      selected = atoi(selectedItem->GetLabel2().c_str());
-  }
-  else
-    return false;
 
-  if (selected < 0)
-    return false;
+    if (selected < 0)
+      return false;
+
+    // check for duplicate versions
+    bool duplicate = false;
+    for (int i = 0; i < targetList.Size(); i++)
+    {
+      if (StringUtils::EqualsNoCase(selectedType, targetList[i]->GetLabel()))
+      {
+        duplicate = true;
+        break;
+      }
+    }
+
+    // confirm with user for duplication
+    if (!duplicate || CGUIDialogYesNo::ShowAndGetInput(CVariant{14117}, StringUtils::Format(g_localizeStrings.Get(39308), selectedType)))
+      break;
+  }
+  while (true);
 
   videodb.SetMovieVersion(dbId, targetDbId, selected);
 
