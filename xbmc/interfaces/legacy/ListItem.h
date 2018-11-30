@@ -648,6 +648,7 @@ namespace XBMCAddon
       /// | set           | string (Batman Collection) - name of the collection
       /// | setoverview   | string (All Batman movies) - overview of the collection
       /// | tag           | string (cult) or list of strings (["cult", "documentary", "best movies"]) - movie tag
+      /// | version       | string (Movie version, "EXTENDED" for example)
       /// | imdbnumber    | string (tt0110293) - IMDb code
       /// | code          | string (101) - Production code
       /// | aired         | string (2008-12-07)

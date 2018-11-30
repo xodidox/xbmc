@@ -43,7 +43,7 @@ void CVideoInfoTag::Reset()
   m_set.id = -1;
   m_set.overview.clear();
   m_tags.clear();
-  m_strVersion = "STANDARD";
+  m_strVersion.clear();
   m_strFile.clear();
   m_strPath.clear();
   m_strMPAARating.clear();

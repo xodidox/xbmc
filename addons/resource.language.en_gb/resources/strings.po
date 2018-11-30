@@ -21862,7 +21862,7 @@ msgstr ""
 
 #: xbmc/video/dialogs/GUIDialogVideoInfo.cpp
 msgctxt "#39302"
-msgid "Convert movie to an additional version of moive"
+msgid "Convert movie to an additional version for"
 msgstr ""
 
 #: xbmc/video/dialogs/GUIDialogVideoInfo.cpp
@@ -21877,10 +21877,15 @@ msgstr ""
 
 #: xbmc/video/dialogs/GUIDialogVideoInfo.cpp
 msgctxt "#39305"
-msgid "Invalid movie selection"
+msgid "Invalid operation"
 msgstr ""
 
 #: xbmc/video/dialogs/GUIDialogVideoInfo.cpp
 msgctxt "#39306"
-msgid "There is more than one movie version exist for the selected movie."
+msgid "There is more than one movie version exist for the selected movie. It's not allowed to convert this movie to an additonal version for another movie. Please remove it from library and covert each version separately after rescanning them."
+msgstr ""
+
+#: xbmc/video/dialogs/GUIDialogVideoInfo.cpp
+msgctxt "#39307"
+msgid "Change default movie version"
 msgstr ""

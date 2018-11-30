@@ -647,7 +647,8 @@ void CGUIDialogVideoInfo::OnChangeVersion()
   list.Sort(SortByLabel, SortOrderAscending, CServiceBroker::GetSettingsComponent()->GetSettings()->GetBool(CSettings::SETTING_FILELISTS_IGNORETHEWHENSORTING) ? SortAttributeIgnoreArticle : SortAttributeNone);
   dialog->Reset();
   dialog->SetItems(list);
-  dialog->SetHeading(CVariant{39303});
+  dialog->SetHeading(CVariant{39307});
+  dialog->SetSelected(videodb.GetMovieCurrentVersion(dbId));
   dialog->Open();
 
   if (dialog->IsConfirmed())
@@ -664,9 +665,7 @@ void CGUIDialogVideoInfo::OnChangeVersion()
 
   videodb.ChangeMovieVersion(dbId, selected);
 
-  std::string path;
-  videodb.GetFilePathById(dbId, path, VIDEODB_CONTENT_MOVIES);
-  m_movieItem->SetPath(path);
+  Close();
 }
 
 void CGUIDialogVideoInfo::Play(bool resume)
@@ -1800,12 +1799,13 @@ bool CGUIDialogVideoInfo::SetMovieVersion(const CFileItemPtr &item)
         return false;
 
       dialog->SetHeading(CVariant{39305});
-      dialog->SetLine(1, CVariant{"\n"});
-      dialog->SetLine(2, CVariant{39306});
+      dialog->SetLine(1, CVariant{39306});
       dialog->Open();
 
       return false;
   }
+
+  list.Clear();
 
   int targetDbId;
 
@@ -1813,6 +1813,17 @@ bool CGUIDialogVideoInfo::SetMovieVersion(const CFileItemPtr &item)
   videodb.GetMoviesNav("videodb://movies/titles", list);
   if (list.Size() < 1)
     return false;
+
+  int itemId = 0;
+
+  for (int i = 0; i < list.Size(); i++)
+  {
+    if (list[i]->GetVideoInfoTag()->m_iDbId == dbId)
+    {
+      itemId = i;
+      break;
+    }
+  }
 
   CGUIDialogSelect* dialog = CServiceBroker::GetGUI()->GetWindowManager().GetWindow<CGUIDialogSelect>(WINDOW_DIALOG_SELECT);
   if (!dialog)
@@ -1824,6 +1835,7 @@ bool CGUIDialogVideoInfo::SetMovieVersion(const CFileItemPtr &item)
   dialog->Reset();
   dialog->SetItems(list);
   dialog->SetHeading(CVariant{39302});
+  dialog->SetSelected(itemId);
   dialog->Open();
   selected = dialog->GetSelectedItem();
 
@@ -1841,6 +1853,7 @@ bool CGUIDialogVideoInfo::SetMovieVersion(const CFileItemPtr &item)
   dialog->SetItems(list);
   dialog->SetHeading(CVariant{39303});
   dialog->EnableButton(true, 39304); // new version via button
+  dialog->SetSelected(1); // skip the first one as it's default
   dialog->Open();
 
   if (dialog->IsButtonPressed())

@@ -875,6 +875,7 @@ public:
   void ClearMovieSet(int idMovie);
   void SetMovieSet(int idMovie, int idSet);
   void GetMovieVersion(int idMovie, CFileItemList& items);
+  std::string GetMovieCurrentVersion(int idMovie);
   void SetMovieVersion(int idMovieSource, int idMovieTarget, int idType);
   void ChangeMovieVersion(int idMovie, int idType);
   bool SetVideoUserRating(int dbId, int rating, const MediaType& mediaType);
@@ -1010,6 +1011,8 @@ private:
   void ConstructPath(std::string& strDest, const std::string& strPath, const std::string& strFileName);
   void SplitPath(const std::string& strFileNameAndPath, std::string& strPath, std::string& strFileName);
   void InvalidatePathHash(const std::string& strPath);
+
+  void InitializeTypeTable();
 
   /*! \brief Get a safe filename from a given string
    \param dir directory to use for the file

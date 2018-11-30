@@ -196,7 +196,7 @@ void CVideoDatabase::CreateTables()
 
   CLog::Log(LOGINFO, "create type table");
   m_pDS->exec("CREATE TABLE type (type_id INTEGER PRIMARY KEY, name TEXT)");
-  m_pDS->exec("INSERT INTO type VALUES(1, 'STANDARD')");
+  InitializeTypeTable();
 
   CLog::Log(LOGINFO, "create type_link table");
   m_pDS->exec("CREATE TABLE type_link (file_id INTEGER PRIMARY KEY, media_id INTEGER, media_type TEXT, type_id INTEGER)");
@@ -292,6 +292,7 @@ void CVideoDatabase::CreateAnalytics()
               "DELETE FROM tag_link WHERE media_id=old.idMovie AND media_type='movie'; "
               "DELETE FROM rating WHERE media_id=old.idMovie AND media_type='movie'; "
               "DELETE FROM uniqueid WHERE media_id=old.idMovie AND media_type='movie'; "
+              "DELETE FROM type_link WHERE media_id=old.idMovie AND media_type='movie'; "
               "END");
   m_pDS->exec("CREATE TRIGGER delete_tvshow AFTER DELETE ON tvshow FOR EACH ROW BEGIN "
               "DELETE FROM actor_link WHERE media_id=old.idShow AND media_type='tvshow'; "
@@ -3521,7 +3522,6 @@ void CVideoDatabase::DeleteMovie(int idMovie, bool bKeepId /* = false */)
         InvalidatePathHash(path);
 
       m_pDS->exec(PrepareSQL("DELETE FROM movie WHERE idMovie = %i", idMovie));
-      m_pDS->exec(PrepareSQL("DELETE FROM type_link WHERE media_id = %i", idMovie));
     }
 
     //! @todo move this below CommitTransaction() once UPnP doesn't rely on this anymore
@@ -3785,17 +3785,17 @@ void CVideoDatabase::GetMovieVersion(int idMovie, CFileItemList& items)
 
   try
   {
-      m_pDS->query(PrepareSQL("SELECT type.name AS name,"
-                              "  path.strPath AS strPath,"
-                              "  files.strFileName AS strFileName "
-                              "FROM type"
-                              "  JOIN type_link ON"
-                              "    type_link.type_id = type.type_id"
-                              "  JOIN files ON"
-                              "    files.idFile = type_link.file_id"
-                              "  JOIN path ON"
-                              "    path.idPath = files.idPath "
-                              "WHERE type_link.media_id = %i", idMovie));
+    m_pDS->query(PrepareSQL("SELECT type.name AS name,"
+                            "  path.strPath AS strPath,"
+                            "  files.strFileName AS strFileName "
+                            "FROM type"
+                            "  JOIN type_link ON"
+                            "    type_link.type_id = type.type_id"
+                            "  JOIN files ON"
+                            "    files.idFile = type_link.file_id"
+                            "  JOIN path ON"
+                            "    path.idPath = files.idPath "
+                            "WHERE type_link.media_id = %i", idMovie));
 
     while (!m_pDS->eof())
     {
@@ -3813,6 +3813,38 @@ void CVideoDatabase::GetMovieVersion(int idMovie, CFileItemList& items)
   {
     CLog::Log(LOGERROR, "%s failed for movie %d", __FUNCTION__, idMovie);
   }
+}
+
+std::string CVideoDatabase::GetMovieCurrentVersion(int idMovie)
+{
+  if (m_pDB.get() == nullptr || m_pDS.get() == nullptr)
+    return "";
+
+  std::string name = "";
+
+  try
+  {
+    m_pDS->query(PrepareSQL("SELECT type.name AS name "
+                            "FROM type"
+                            "  JOIN type_link ON"
+                            "    type_link.type_id = type.type_id"
+                            "  JOIN movie ON"
+                            "    movie.idFile = type_link.file_id "
+                            "WHERE movie.idMovie = %i", idMovie));
+
+    if (!m_pDS->eof())
+    {
+      name = m_pDS->fv(0).get_asString();
+    }
+
+    m_pDS->close();
+  }
+  catch (...)
+  {
+    CLog::Log(LOGERROR, "%s failed for movie %d", __FUNCTION__, idMovie);
+  }
+
+  return name;
 }
 
 int CVideoDatabase::GetFileIdByMovie(int idMovie)
@@ -3875,8 +3907,6 @@ void CVideoDatabase::SetMovieVersion(int idMovieSource, int idMovieTarget, int i
 
   if (idMovieSource != idMovieTarget)
   {
-    //ExecuteQuery(PrepareSQL("DELETE FROM type_link WHERE file_id = %i", idFile));
-    //ExecuteQuery(PrepareSQL("INSERT INTO type_link VALUES(%i, %i, 'movie', %i)", idFile, idMovieTarget, idType));
     ExecuteQuery(PrepareSQL("UPDATE type_link SET media_id = %i, type_id = %i WHERE file_id = %i", idMovieTarget, idType, idFile));
     DeleteMovie(idMovieSource);
   }
@@ -5854,7 +5884,7 @@ void CVideoDatabase::UpdateTables(int iVersion)
   {
     // create type table
     m_pDS->exec("CREATE TABLE type (type_id INTEGER PRIMARY KEY, name TEXT)");
-    m_pDS->exec("INSERT INTO type VALUES(1, 'STANDARD')");
+    InitializeTypeTable();
 
     // create type_link table
     m_pDS->exec("CREATE TABLE type_link (file_id INTEGER PRIMARY KEY, media_id INTEGER, media_type TEXT, type_id INTEGER)");
@@ -7378,6 +7408,8 @@ bool CVideoDatabase::GetItems(const std::string &strBaseDir, VIDEODB_CONTENT_TYP
     return GetCountriesNav(strBaseDir, items, mediaType, filter);
   else if (StringUtils::EqualsNoCase(itemType, "tags"))
     return GetTagsNav(strBaseDir, items, mediaType, filter);
+  else if (StringUtils::EqualsNoCase(itemType, "types"))
+      return GetTypesNav(strBaseDir, items);
   else if (StringUtils::EqualsNoCase(itemType, "artists") && mediaType == VIDEODB_CONTENT_MUSICVIDEOS)
     return GetActorsNav(strBaseDir, items, mediaType, filter);
   else if (StringUtils::EqualsNoCase(itemType, "albums") && mediaType == VIDEODB_CONTENT_MUSICVIDEOS)
@@ -10854,4 +10886,35 @@ bool CVideoDatabase::SetVideoUserRating(int dbId, int rating, const MediaType& m
     CLog::Log(LOGERROR, "%s (%i, %s, %i) failed", __FUNCTION__, dbId, mediaType.c_str(), rating);
   }
   return false;
+}
+
+void CVideoDatabase::InitializeTypeTable()
+{
+  const char* types[] = { "Standard",
+                          "Extended",
+                          "Unrated",
+                          "Uncut",
+                          "Remastered",
+                          "Limited",
+                          "Special",
+                          "Director Cut",
+                          "The Final Cut",
+                          "Super Duper Cut",
+                          "Theatrical",
+                          "3D",
+                          "4K UHD",
+                          "IMAX",
+                          "Collector",
+                          "Ultimate Collector",
+                          "Criterion Collection",
+                          "10th Anniversary",
+                          "20th Anniversary",
+                          "25th Anniversary",
+                          "30th Anniversary",
+                          "40th Anniversary",
+                          "50th Anniversary",
+  };
+
+  for (int i = 0; i < sizeof(types)/sizeof(types[0]); i++)
+    m_pDS->exec(PrepareSQL("INSERT INTO type VALUES(%i, '%s')", i + 1, types[i]));
 }
