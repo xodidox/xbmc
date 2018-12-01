@@ -665,7 +665,8 @@ void CGUIDialogVideoInfo::OnChangeVersion()
 
   videodb.ChangeMovieVersion(dbId, selected);
 
-  Close();
+  // update video info tag since we changed the video file for the movie
+  *(m_movieItem->GetVideoInfoTag()) = videodb.GetDetailsByTypeAndId(VIDEODB_CONTENT_MOVIES, dbId);
 }
 
 void CGUIDialogVideoInfo::Play(bool resume)
