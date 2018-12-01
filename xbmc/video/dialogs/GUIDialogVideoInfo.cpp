@@ -665,6 +665,11 @@ void CGUIDialogVideoInfo::OnChangeVersion()
 
   videodb.ChangeMovieVersion(dbId, selected);
 
+  std::string path;
+  videodb.GetFilePathById(dbId, path, VIDEODB_CONTENT_MOVIES);
+  m_movieItem->SetPath(path);
+  m_movieItem->SetDynPath(path);
+
   // update video info tag since we changed the video file for the movie
   *(m_movieItem->GetVideoInfoTag()) = videodb.GetDetailsByTypeAndId(VIDEODB_CONTENT_MOVIES, dbId);
 }
