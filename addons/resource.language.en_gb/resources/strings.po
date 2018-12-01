@@ -21865,7 +21865,7 @@ msgstr ""
 #. Manage movie version dialog title
 #: xbmc/video/dialogs/GUIDialogVideoInfo.cpp
 msgctxt "#39302"
-msgid "Convert movie to an additional version for"
+msgid "Convert movie to an additional version of"
 msgstr ""
 
 #. Movie version selection dialog title
@@ -21901,5 +21901,5 @@ msgstr ""
 #. Warning dialog text
 #: xbmc/video/dialogs/GUIDialogVideoInfo.cpp
 msgctxt "#39308"
-msgid "The \"%s\" version of this movie already exists, are you sure to add a duplication?"
+msgid "The \"{0:s}\" version of this movie already exists, are you sure to add a duplication?"
 msgstr ""

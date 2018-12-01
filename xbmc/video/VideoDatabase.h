@@ -874,7 +874,7 @@ public:
   int AddSet(const std::string& strSet, const std::string& strOverview = "");
   void ClearMovieSet(int idMovie);
   void SetMovieSet(int idMovie, int idSet);
-  void GetMovieVersion(int idMovie, CFileItemList& items);
+  void GetMovieVersion(int idMovie, CFileItemList& items) const;
   std::string GetMovieCurrentVersion(int idMovie) const;
   void SetMovieVersion(int idMovieSource, int idMovieTarget, int idType);
   void ChangeMovieVersion(int idMovie, int idType);
@@ -1008,8 +1008,8 @@ private:
   virtual int GetExportVersion() const { return 1; };
   const char *GetBaseDBName() const override { return "MyVideos"; };
 
-  void ConstructPath(std::string& strDest, const std::string& strPath, const std::string& strFileName);
-  void SplitPath(const std::string& strFileNameAndPath, std::string& strPath, std::string& strFileName);
+  void ConstructPath(std::string& strDest, const std::string& strPath, const std::string& strFileName) const;
+  void SplitPath(const std::string& strFileNameAndPath, std::string& strPath, std::string& strFileName) const;
   void InvalidatePathHash(const std::string& strPath);
 
   void InitializeTypeTable();

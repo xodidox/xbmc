@@ -1886,19 +1886,9 @@ bool CGUIDialogVideoInfo::SetMovieVersion(const CFileItemPtr &item)
     if (selected < 0)
       return false;
 
-    // check for duplicate versions
-    bool duplicate = false;
-    for (int i = 0; i < targetList.Size(); i++)
-    {
-      if (StringUtils::EqualsNoCase(selectedType, targetList[i]->GetLabel()))
-      {
-        duplicate = true;
-        break;
-      }
-    }
-
     // confirm with user for duplication
-    if (!duplicate || CGUIDialogYesNo::ShowAndGetInput(CVariant{14117}, StringUtils::Format(g_localizeStrings.Get(39308), selectedType)))
+    if (!std::any_of(targetList.begin(), targetList.end(), [&selectedType](const CFileItemPtr& item) { return StringUtils::EqualsNoCase(selectedType, item->GetLabel()); }) ||
+        CGUIDialogYesNo::ShowAndGetInput(CVariant{14117}, StringUtils::Format(g_localizeStrings.Get(39308), selectedType)))
       break;
   }
   while (true);

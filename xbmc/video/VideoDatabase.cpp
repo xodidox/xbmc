@@ -3778,7 +3778,7 @@ void CVideoDatabase::SetMovieSet(int idMovie, int idSet)
     ExecuteQuery(PrepareSQL("update movie set idSet = null where idMovie = %i", idMovie));
 }
 
-void CVideoDatabase::GetMovieVersion(int idMovie, CFileItemList& items)
+void CVideoDatabase::GetMovieVersion(int idMovie, CFileItemList& items) const
 {
   if (!m_pDB || !m_pDS)
     return;
@@ -10391,7 +10391,7 @@ bool CVideoDatabase::ImportArtFromXML(const TiXmlNode *node, std::map<std::strin
   return !artwork.empty();
 }
 
-void CVideoDatabase::ConstructPath(std::string& strDest, const std::string& strPath, const std::string& strFileName)
+void CVideoDatabase::ConstructPath(std::string& strDest, const std::string& strPath, const std::string& strFileName) const
 {
   if (URIUtils::IsStack(strFileName) ||
       URIUtils::IsInArchive(strFileName) || URIUtils::IsPlugin(strPath))
@@ -10400,7 +10400,7 @@ void CVideoDatabase::ConstructPath(std::string& strDest, const std::string& strP
     strDest = URIUtils::AddFileToFolder(strPath, strFileName);
 }
 
-void CVideoDatabase::SplitPath(const std::string& strFileNameAndPath, std::string& strPath, std::string& strFileName)
+void CVideoDatabase::SplitPath(const std::string& strFileNameAndPath, std::string& strPath, std::string& strFileName) const
 {
   if (URIUtils::IsStack(strFileNameAndPath) || StringUtils::StartsWithNoCase(strFileNameAndPath, "rar://") || StringUtils::StartsWithNoCase(strFileNameAndPath, "zip://"))
   {
@@ -10916,6 +10916,6 @@ void CVideoDatabase::InitializeTypeTable()
                           "50th Anniversary",
   };
 
-  for (int i = 0; i < sizeof(types)/sizeof(types[0]); i++)
-    m_pDS->exec(PrepareSQL("INSERT INTO type VALUES(%i, '%s')", i + 1, types[i]));
+  for (const char* type : types)
+    m_pDS->exec(PrepareSQL("INSERT INTO type VALUES(NULL, '%s')", type));
 }
