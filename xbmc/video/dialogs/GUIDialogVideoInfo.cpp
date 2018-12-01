@@ -1814,12 +1814,12 @@ bool CGUIDialogVideoInfo::SetMovieVersion(const CFileItemPtr &item)
 
   list.ClearItems();
 
-  int targetDbId;
-
   // choose the target movie
   videodb.GetMoviesNav("videodb://movies/titles", list);
   if (list.Size() < 1)
     return false;
+
+  list.Sort(SortByLabel, SortOrderAscending, CServiceBroker::GetSettingsComponent()->GetSettings()->GetBool(CSettings::SETTING_FILELISTS_IGNORETHEWHENSORTING) ? SortAttributeIgnoreArticle : SortAttributeNone);
 
   int itemId = 0;
 
@@ -1836,7 +1836,6 @@ bool CGUIDialogVideoInfo::SetMovieVersion(const CFileItemPtr &item)
   if (!dialog)
     return false;
 
-  list.Sort(SortByLabel, SortOrderAscending, CServiceBroker::GetSettingsComponent()->GetSettings()->GetBool(CSettings::SETTING_FILELISTS_IGNORETHEWHENSORTING) ? SortAttributeIgnoreArticle : SortAttributeNone);
   dialog->Reset();
   dialog->SetItems(list);
   dialog->SetHeading(CVariant{39302});
@@ -1847,7 +1846,7 @@ bool CGUIDialogVideoInfo::SetMovieVersion(const CFileItemPtr &item)
   if (selected < 0)
     return false;
 
-  targetDbId = list[selected]->GetVideoInfoTag()->m_iDbId;
+  int targetDbId = list[selected]->GetVideoInfoTag()->m_iDbId;
 
   CFileItemList targetList;
   videodb.GetMovieVersion(targetDbId, targetList);
