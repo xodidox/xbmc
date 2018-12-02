@@ -33,7 +33,7 @@ public:
   bool OnMessage(CGUIMessage& message) override;
   bool OnAction(const CAction &action) override;
 
-  void PlayMovie(const CFileItem *item, const std::string &player = "");
+  void PlayMovie(CFileItem *item, const std::string &player = "");
   static void GetResumeItemOffset(const CFileItem *item, int64_t& startoffset, int& partNumber);
   static bool HasResumeItemOffset(const CFileItem *item);
 

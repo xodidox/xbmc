@@ -82,6 +82,7 @@ public:
   static const std::string SETTING_VIDEOLIBRARY_SHOWEMPTYTVSHOWS;
   static const std::string SETTING_LOCALE_AUDIOLANGUAGE;
   static const std::string SETTING_VIDEOPLAYER_PREFERDEFAULTFLAG;
+  static const std::string SETTING_VIDEOPLAYER_PLAYDEFAULTVERSION;
   static const std::string SETTING_VIDEOPLAYER_AUTOPLAYNEXTITEM;
   static const std::string SETTING_VIDEOPLAYER_SEEKSTEPS;
   static const std::string SETTING_VIDEOPLAYER_SEEKDELAY;

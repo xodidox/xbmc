@@ -21883,13 +21883,13 @@ msgstr ""
 #. Warning dialog title
 #: xbmc/video/dialogs/GUIDialogVideoInfo.cpp
 msgctxt "#39305"
-msgid "Invalid operation"
+msgid "Not supported"
 msgstr ""
 
 #. Warning dialog text
 #: xbmc/video/dialogs/GUIDialogVideoInfo.cpp
 msgctxt "#39306"
-msgid "There is more than one movie version exist for the selected movie. It's not allowed to convert this movie to an additonal version for another movie. Please remove it from library and covert each version separately after rescanning them."
+msgid "There is more than one movie version exist for the selected movie. It's not allowed to convert this movie to an additonal version of another movie. Please remove it from library and covert each version separately after rescanning them."
 msgstr ""
 
 #. Default movie version change dialog title
@@ -21902,4 +21902,16 @@ msgstr ""
 #: xbmc/video/dialogs/GUIDialogVideoInfo.cpp
 msgctxt "#39308"
 msgid "The \"{0:s}\" version of this movie already exists, are you sure to add a duplication?"
+msgstr ""
+
+#. Play default video version setting
+#: xbmc/video/dialogs/GUIDialogVideoInfo.cpp
+msgctxt "#39309"
+msgid "Play default video version automatically"
+msgstr ""
+
+#. Help for play default video version setting
+#: xbmc/video/dialogs/GUIDialogVideoInfo.cpp
+msgctxt "#39310"
+msgid "Select player action for multiple version video.[CR][Enabled] Play default video version without asking.[CR][Disabled] Always show a dialogue to select desired video version."
 msgstr ""

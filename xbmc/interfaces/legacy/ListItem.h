@@ -718,6 +718,7 @@ namespace XBMCAddon
       /// @python_v18 Added new **game** type and associated infolabels.
       /// Added labels **dbid** (music), **setoverview**, **tag**, **sortepisode**, **sortseason**, **episodeguide**, **showlink**.
       /// Extended labels **genre**, **country**, **director**, **studio**, **writer**, **tag**, **credits** to also use a list of strings.
+      /// @python_v19 Added version infolabel for movies
       ///
       /// **Example:**
       /// ~~~~~~~~~~~~~{.py}
