@@ -3991,7 +3991,7 @@ void CVideoDatabase::GetMoviesByTitle(std::string title, CFileItemList& items) c
                             "    files.idFile = movie.idFile"
                             "  JOIN path ON"
                             "    path.idPath = files.idPath "
-                            "WHERE movie.c%02d = %s", VIDEODB_ID_TITLE, title.c_str()));
+                            "WHERE movie.c%02d = '%s'", VIDEODB_ID_TITLE, title.c_str()));
 
     std::string file;
 

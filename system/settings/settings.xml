@@ -736,6 +736,11 @@
           <default>false</default>
           <control type="toggle" />
         </setting>
+        <setting id="videolibrary.addduplicatevideo" type="boolean" label="39313" help="39314">
+          <level>1</level>
+          <default>false</default>
+          <control type="toggle" />
+        </setting>
         <setting id="videolibrary.cleanup" type="action" label="14247" help="36148">
           <level>2</level>
           <control type="button" format="action" />

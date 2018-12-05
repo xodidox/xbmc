@@ -110,6 +110,7 @@ const std::string CSettings::SETTING_VIDEOLIBRARY_GROUPMOVIESETS = "videolibrary
 const std::string CSettings::SETTING_VIDEOLIBRARY_GROUPSINGLEITEMSETS = "videolibrary.groupsingleitemsets";
 const std::string CSettings::SETTING_VIDEOLIBRARY_UPDATEONSTARTUP = "videolibrary.updateonstartup";
 const std::string CSettings::SETTING_VIDEOLIBRARY_BACKGROUNDUPDATE = "videolibrary.backgroundupdate";
+const std::string CSettings::SETTING_VIDEOLIBRARY_ADDDUPLICATEVIDEO = "videolibrary.addduplicatevideo";
 const std::string CSettings::SETTING_VIDEOLIBRARY_CLEANUP = "videolibrary.cleanup";
 const std::string CSettings::SETTING_VIDEOLIBRARY_EXPORT = "videolibrary.export";
 const std::string CSettings::SETTING_VIDEOLIBRARY_IMPORT = "videolibrary.import";
