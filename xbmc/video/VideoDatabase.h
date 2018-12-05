@@ -901,6 +901,7 @@ protected:
 
   int GetFileIdByMovie(int idMovie) const;
   int GetFileIdByMovieVersion(int idMovie, int idType) const;
+  std::string GetFilePathByFileId(int idFile) const;
 
   int AddToTable(const std::string& table, const std::string& firstField, const std::string& secondField, const std::string& value);
   int UpdateRatings(int mediaId, const char *mediaType, const RatingMap& values, const std::string& defaultRating);

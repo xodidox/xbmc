@@ -1608,6 +1608,7 @@ void CFileItem::UpdateInfo(const CFileItem &item, bool replaceLabels /*=true*/)
       m_videoInfoTag = new CVideoInfoTag;
     }
 
+    m_strDynPath = item.m_strDynPath;
     m_pvrRecordingInfoTag = item.m_pvrRecordingInfoTag;
 
     SetOverlayImage(ICON_OVERLAY_UNWATCHED, GetVideoInfoTag()->GetPlayCount() > 0);

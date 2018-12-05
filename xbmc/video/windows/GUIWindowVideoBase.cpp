@@ -1149,44 +1149,10 @@ bool CGUIWindowVideoBase::OnPlayAndQueueMedia(const CFileItemPtr &item, std::str
   return CGUIMediaWindow::OnPlayAndQueueMedia(movieItem, player);
 }
 
-void CGUIWindowVideoBase::PlayMovie(CFileItem *item, const std::string &player)
+void CGUIWindowVideoBase::PlayMovie(const CFileItem *item, const std::string &player)
 {
-  if(m_thumbLoader.IsLoading())
+  if (m_thumbLoader.IsLoading())
     m_thumbLoader.StopAsync();
-
-  if (!CServiceBroker::GetSettingsComponent()->GetSettings()->GetBool(CSettings::SETTING_VIDEOPLAYER_PLAYDEFAULTVERSION))
-  {
-    CVideoDatabase videodb;
-    if (!videodb.Open())
-      return;
-
-    CFileItemList list;
-    int dbId = item->GetVideoInfoTag()->m_iDbId;
-    videodb.GetMovieVersion(dbId, list);
-
-    if (list.Size() > 1)
-    {
-      CGUIDialogSelect* dialog = CServiceBroker::GetGUI()->GetWindowManager().GetWindow<CGUIDialogSelect>(WINDOW_DIALOG_SELECT);
-      if (!dialog)
-        return;
-
-      list.Sort(SortByLabel, SortOrderAscending, CServiceBroker::GetSettingsComponent()->GetSettings()->GetBool(CSettings::SETTING_FILELISTS_IGNORETHEWHENSORTING) ? SortAttributeIgnoreArticle : SortAttributeNone);
-      dialog->Reset();
-      dialog->SetItems(list);
-      dialog->SetHeading(CVariant{39303});
-      dialog->SetSelected(videodb.GetMovieCurrentVersion(dbId));
-      dialog->Open();
-
-      if (dialog->IsConfirmed())
-      {
-        CFileItemPtr selectedItem = dialog->GetSelectedFileItem();
-        if (selectedItem)
-          item->SetPath(selectedItem->GetLabel2());
-      }
-      else
-        return;
-    }
-  }
 
   CServiceBroker::GetPlaylistPlayer().Play(std::make_shared<CFileItem>(*item), player);
 

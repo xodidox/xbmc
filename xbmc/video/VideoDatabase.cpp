@@ -3808,6 +3808,7 @@ void CVideoDatabase::GetMovieVersion(int idMovie, CFileItemList& items) const
       items.Add(pItem);
       m_pDS->next();
     }
+
     m_pDS->close();
   }
   catch (...)
@@ -3846,6 +3847,32 @@ std::string CVideoDatabase::GetMovieCurrentVersion(int idMovie) const
   }
 
   return name;
+}
+
+std::string CVideoDatabase::GetFilePathByFileId(int idFile) const
+{
+  if (!m_pDB || !m_pDS)
+    return "";
+
+  std::string path;
+
+  try
+  {
+    m_pDS->query(PrepareSQL("SELECT strPath, strFileName FROM files JOIN path ON path.idPath = files.idPath WHERE idFile = %i", idFile));
+
+    if (!m_pDS->eof())
+    {
+      ConstructPath(path, m_pDS->fv(0).get_asString(), m_pDS->fv(1).get_asString());
+    }
+
+    m_pDS->close();
+  }
+  catch (...)
+  {
+    CLog::Log(LOGERROR, "%s failed for file %d", __FUNCTION__, idFile);
+  }
+
+  return path;
 }
 
 int CVideoDatabase::GetFileIdByMovie(int idMovie) const
@@ -3906,6 +3933,8 @@ void CVideoDatabase::SetMovieVersion(int idMovieSource, int idMovieTarget, int i
   if (idFile < 0)
     return;
 
+  BeginTransaction();
+
   if (idMovieSource != idMovieTarget)
   {
     ExecuteQuery(PrepareSQL("UPDATE type_link SET media_id = %i, type_id = %i WHERE file_id = %i", idMovieTarget, idType, idFile));
@@ -3913,6 +3942,8 @@ void CVideoDatabase::SetMovieVersion(int idMovieSource, int idMovieTarget, int i
   }
   else
     ExecuteQuery(PrepareSQL("UPDATE type_link SET type_id = %i WHERE file_id = %i", idType, idFile));
+
+  CommitTransaction();
 }
 
 void CVideoDatabase::ChangeMovieVersion(int idMovie, int idType)
@@ -3921,7 +3952,15 @@ void CVideoDatabase::ChangeMovieVersion(int idMovie, int idType)
   if (idFile < 0)
     return;
 
-  ExecuteQuery(PrepareSQL("UPDATE movie SET idFile = %i WHERE idMovie = %i", idFile, idMovie));
+  std::string path = GetFilePathByFileId(idFile);
+  if (path.empty())
+    return;
+
+  BeginTransaction();
+
+  ExecuteQuery(PrepareSQL("UPDATE movie SET idFile = %i, c22 = '%s' WHERE idMovie = %i", idFile, path.c_str(), idMovie));
+
+  CommitTransaction();
 }
 
 void CVideoDatabase::DeleteTag(int idTag, VIDEODB_CONTENT_TYPE mediaType)

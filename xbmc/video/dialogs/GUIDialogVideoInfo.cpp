@@ -671,7 +671,11 @@ void CGUIDialogVideoInfo::OnChangeVersion()
   m_movieItem->SetDynPath(path);
 
   // update video info tag since we changed the video file for the movie
-  *(m_movieItem->GetVideoInfoTag()) = videodb.GetDetailsByTypeAndId(VIDEODB_CONTENT_MOVIES, dbId);
+  videodb.GetMovieInfo(path, *m_movieItem->GetVideoInfoTag());
+
+  // send a message to all windows to tell them to update the fileitem (eg playlistplayer, media windows)
+  CGUIMessage msg(GUI_MSG_NOTIFY_ALL, 0, 0, GUI_MSG_UPDATE_ITEM, GUI_MSG_FLAG_FORCE_UPDATE, m_movieItem);
+  CServiceBroker::GetGUI()->GetWindowManager().SendMessage(msg);
 }
 
 void CGUIDialogVideoInfo::Play(bool resume)
@@ -1801,15 +1805,15 @@ bool CGUIDialogVideoInfo::SetMovieVersion(const CFileItemPtr &item)
   videodb.GetMovieVersion(dbId, list);
   if (list.Size() > 1)
   {
-      CGUIDialogOK* dialog = CServiceBroker::GetGUI()->GetWindowManager().GetWindow<CGUIDialogOK>(WINDOW_DIALOG_OK);
-      if (!dialog)
-        return false;
-
-      dialog->SetHeading(CVariant{39305});
-      dialog->SetLine(1, CVariant{39306});
-      dialog->Open();
-
+    CGUIDialogOK* dialog = CServiceBroker::GetGUI()->GetWindowManager().GetWindow<CGUIDialogOK>(WINDOW_DIALOG_OK);
+    if (!dialog)
       return false;
+
+    dialog->SetHeading(CVariant{39305});
+    dialog->SetLine(1, CVariant{39306});
+    dialog->Open();
+
+    return false;
   }
 
   list.ClearItems();
@@ -1851,7 +1855,7 @@ bool CGUIDialogVideoInfo::SetMovieVersion(const CFileItemPtr &item)
   CFileItemList targetList;
   videodb.GetMovieVersion(targetDbId, targetList);
 
-  do
+  while (true)
   {
     list.ClearItems();
 
@@ -1896,7 +1900,6 @@ bool CGUIDialogVideoInfo::SetMovieVersion(const CFileItemPtr &item)
         CGUIDialogYesNo::ShowAndGetInput(CVariant{14117}, StringUtils::Format(g_localizeStrings.Get(39308), selectedType)))
       break;
   }
-  while (true);
 
   videodb.SetMovieVersion(dbId, targetDbId, selected);
 

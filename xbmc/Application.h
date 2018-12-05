@@ -465,6 +465,8 @@ protected:
   */
   void HandleShutdownMessage();
 
+  void SelectMovieVersion(CFileItem& movieItem);
+
   CInertialScrollingHandler *m_pInertialScrollingHandler;
 
   ReplayGainSettings m_replayGainSettings;

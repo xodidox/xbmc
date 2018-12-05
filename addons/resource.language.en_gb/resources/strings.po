@@ -21865,7 +21865,7 @@ msgstr ""
 #. Manage movie version dialog title
 #: xbmc/video/dialogs/GUIDialogVideoInfo.cpp
 msgctxt "#39302"
-msgid "Convert movie to an additional version of"
+msgid "Convert to an additional version of movie"
 msgstr ""
 
 #. Movie version selection dialog title
@@ -21889,29 +21889,29 @@ msgstr ""
 #. Warning dialog text
 #: xbmc/video/dialogs/GUIDialogVideoInfo.cpp
 msgctxt "#39306"
-msgid "There is more than one movie version exist for the selected movie. It's not allowed to convert this movie to an additonal version of another movie. Please remove it from library and covert each version separately after rescanning them."
+msgid "More than one version of the selected movie exists. It cannot be converted to an additional version of another movie. Please remove it from the library, then rescan and convert each version separately."
 msgstr ""
 
 #. Default movie version change dialog title
 #: xbmc/video/dialogs/GUIDialogVideoInfo.cpp
 msgctxt "#39307"
-msgid "Change default movie version"
+msgid "Change default version"
 msgstr ""
 
 #. Warning dialog text
 #: xbmc/video/dialogs/GUIDialogVideoInfo.cpp
 msgctxt "#39308"
-msgid "The \"{0:s}\" version of this movie already exists, are you sure to add a duplication?"
+msgid "The \"{0:s}\" version of this movie already exists, do you want to add a duplicate?"
 msgstr ""
 
 #. Play default video version setting
-#: xbmc/video/dialogs/GUIDialogVideoInfo.cpp
+#: system/settings/settings.xml
 msgctxt "#39309"
 msgid "Play default video version automatically"
 msgstr ""
 
 #. Help for play default video version setting
-#: xbmc/video/dialogs/GUIDialogVideoInfo.cpp
+#: system/settings/settings.xml
 msgctxt "#39310"
 msgid "Select player action for multiple version video.[CR][Enabled] Play default video version without asking.[CR][Disabled] Always show a dialogue to select desired video version."
 msgstr ""
