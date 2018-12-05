@@ -687,8 +687,11 @@ namespace VIDEO
                     result == CInfoScanner::OVERRIDE_NFO) ? loader.get() : nullptr,
                    pDlgProgress))
     {
-      if (AddVideo(pItem, info2->Content(), bDirNames, useLocal) < 0)
+      int dbId = AddVideo(pItem, info2->Content(), bDirNames, useLocal);
+      if (dbId < 0)
         return INFO_ERROR;
+      if (info2->Content() == CONTENT_MOVIES && ProcessMovieVersion(dbId))
+        return INFO_HAVE_ALREADY;
       return INFO_ADDED;
     }
     //! @todo This is not strictly correct as we could fail to download information here or error, or be cancelled
@@ -2069,4 +2072,16 @@ namespace VIDEO
     return 0;    // didn't find anything
   }
 
+  bool CVideoInfoScanner::ProcessMovieVersion(int dbId)
+  {
+    CVideoDatabase videodb;
+    if (!videodb.Open())
+      return false;
+
+    CFileItemList list;
+    std::string title = videodb.GetMovieTitle(dbId);
+    videodb.GetMoviesByTitle(title, list);
+    if (list.Size() < 2)
+      return false;
+  }
 }

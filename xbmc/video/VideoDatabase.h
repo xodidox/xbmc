@@ -882,6 +882,9 @@ public:
 
   int AddType(const std::string& strType);
 
+  std::string GetMovieTitle(int idMovie) const;
+  void GetMoviesByTitle(std::string title, CFileItemList& items) const;
+
 protected:
   int GetMovieId(const std::string& strFilenameAndPath);
   int GetMusicVideoId(const std::string& strFilenameAndPath);

@@ -2111,6 +2111,19 @@ bool CVideoDatabase::GetMovieInfo(const std::string& strFilenameAndPath, CVideoI
   return false;
 }
 
+std::string CVideoDatabase::GetMovieTitle(int idMovie) const
+{
+  if (!m_pDB || !m_pDS)
+    return "";
+
+  m_pDS->query(PrepareSQL("SELECT c%02d from movie where idMovie = %i", VIDEODB_ID_TITLE, idMovie));
+
+  if (!m_pDS->eof())
+    return m_pDS->fv(0).get_asString();
+  else
+    return "";
+}
+
 //********************************************************************************************************************************
 bool CVideoDatabase::GetTvShowInfo(const std::string& strPath, CVideoInfoTag& details, int idTvShow /* = -1 */, CFileItem *item /* = NULL */, int getDetails /* = VideoDbDetailsAll */)
 {
@@ -3958,9 +3971,46 @@ void CVideoDatabase::ChangeMovieVersion(int idMovie, int idType)
 
   BeginTransaction();
 
-  ExecuteQuery(PrepareSQL("UPDATE movie SET idFile = %i, c22 = '%s' WHERE idMovie = %i", idFile, path.c_str(), idMovie));
+  ExecuteQuery(PrepareSQL("UPDATE movie SET idFile = %i, c%02d = '%s' WHERE idMovie = %i", idFile, VIDEODB_ID_BASEPATH, path.c_str(), idMovie));
 
   CommitTransaction();
+}
+
+void CVideoDatabase::GetMoviesByTitle(std::string title, CFileItemList& items) const
+{
+  if (!m_pDB || !m_pDS)
+    return;
+
+  try
+  {
+    m_pDS->query(PrepareSQL("SELECT movie.idMovie AS idMovie,"
+                            "  path.strPath AS strPath,"
+                            "  files.strFileName AS strFileName "
+                            "FROM movie"
+                            "  JOIN files ON"
+                            "    files.idFile = movie.idFile"
+                            "  JOIN path ON"
+                            "    path.idPath = files.idPath "
+                            "WHERE movie.c%02d = %s", VIDEODB_ID_TITLE, title.c_str()));
+
+    std::string file;
+
+    while (!m_pDS->eof())
+    {
+      CFileItemPtr pItem(new CFileItem());
+      ConstructPath(file, m_pDS->fv(1).get_asString(), m_pDS->fv(2).get_asString());
+      pItem->SetLabel(file);
+      pItem->SetLabel2(m_pDS->fv(0).get_asString());
+      items.Add(pItem);
+      m_pDS->next();
+    }
+
+    m_pDS->close();
+  }
+  catch (...)
+  {
+    CLog::Log(LOGERROR, "%s failed for movie %s", __FUNCTION__, title.c_str());
+  }
 }
 
 void CVideoDatabase::DeleteTag(int idTag, VIDEODB_CONTENT_TYPE mediaType)
