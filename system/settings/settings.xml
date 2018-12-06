@@ -3,11 +3,6 @@
   <section id="player" label="14200" help="38100">
     <category id="videoplayer" label="14215" help="38103">
       <group id="1" label="14230">
-        <setting id="videoplayer.playdefaultversion" type="boolean" label="39309" help="39310">
-          <level>0</level>
-          <default>false</default>
-          <control type="toggle" />
-        </setting>
         <setting id="videoplayer.autoplaynextitem" type="list[integer]" label="13433" help="36152">
           <constraints>
             <options>
@@ -25,6 +20,11 @@
             <multiselect>true</multiselect>
             <hidevalue>false</hidevalue>
           </control>
+        </setting>
+        <setting id="videoplayer.playdefaultversion" type="boolean" label="39309" help="39310">
+          <level>0</level>
+          <default>false</default>
+          <control type="toggle" />
         </setting>
         <setting id="videoplayer.seeksteps" type="list[integer]" label="13556" help="37042">
           <level>1</level>

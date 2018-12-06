@@ -21907,7 +21907,7 @@ msgstr ""
 #. Play default video version setting
 #: system/settings/settings.xml
 msgctxt "#39309"
-msgid "Play default video version automatically"
+msgid "Play default video version"
 msgstr ""
 
 #. Help for play default video version setting
@@ -21916,26 +21916,26 @@ msgctxt "#39310"
 msgid "Select player action for multiple version video.[CR][Enabled] Play default video version without asking.[CR][Disabled] Always show a dialogue to select desired video version."
 msgstr ""
 
-#. Merge version dialog text
+#. Duplicate movie found dialog title
 #: xbmc\video\VideoInfoScanner.cpp
 msgctxt "#39311"
 msgid "Duplicate movie found"
 msgstr ""
 
-#. Merge version dialog text
+#. Duplicate movie found dialog text
 #: xbmc\video\VideoInfoScanner.cpp
 msgctxt "#39312"
-msgid "A duplicate movie \"{0:s}\" was just added to the library, do you want to convert it to an additional version of the original movie?"
+msgid "A duplicate movie \"{0:s}\" has just been added to the library. Would you like to convert it to an additional version of the original movie?"
 msgstr ""
 
 #. Add duplicate video settting
 #: system/settings/settings.xml
 msgctxt "#39313"
-msgid "Add duplicate video automatically"
+msgid "Add duplicate video to library"
 msgstr ""
 
 #. Help for Add duplicate video settting
 #: system/settings/settings.xml
 msgctxt "#39314"
-msgid "Select scanner action for duplicate video.[CR][Enabled] Add duplicate video to library without asking.[CR][Disabled] Always show a dialogue to convert video to an andditonal version of the original video."
+msgid "Select scanner action for duplicate video.[CR][Enabled] Add duplicate video to library without asking.[CR][Disabled] Ask for converting duplicate video to an andditonal version of the original video."
 msgstr ""
