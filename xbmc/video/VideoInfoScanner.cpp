@@ -2091,7 +2091,10 @@ namespace VIDEO
     if (list.Size() < 2)
       return false;
 
-    if (!CGUIDialogYesNo::ShowAndGetInput(CVariant{ 39311 }, StringUtils::Format(g_localizeStrings.Get(39312), title)))
+    std::string path;
+    videodb.GetFilePathById(dbId, path, VIDEODB_CONTENT_MOVIES);
+
+    if (!CGUIDialogYesNo::ShowAndGetInput(CVariant{39311}, StringUtils::Format(g_localizeStrings.Get(39312), title, path)))
     {
       return false;
     }

@@ -21925,7 +21925,7 @@ msgstr ""
 #. Duplicate movie found dialog text
 #: xbmc\video\VideoInfoScanner.cpp
 msgctxt "#39312"
-msgid "A duplicate movie \"{0:s}\" has just been added to the library. Would you like to convert it to an additional version of the original movie?"
+msgid "A duplicate movie \"{0:s}\" ({1:s}) has just been added to the library. Would you like to convert it to an additional version of the original movie?"
 msgstr ""
 
 #. Add duplicate video settting
